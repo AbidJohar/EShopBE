@@ -23,7 +23,7 @@ const userRegistration = async (req, res) => {
   }
 
   // Validate password strength
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  // const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
   // if (!passwordRegex.test(password)) {
   //   return res.status(400).json({
   //     success: false,
@@ -31,12 +31,12 @@ const userRegistration = async (req, res) => {
   //   });
   // }
 
-   if(!(password > 6 && password < 12)){
+  if (password.length < 8 || password.length > 12) {
     return res.status(400).json({
       success: false,
-      message: "Password must be at least 8 characters"
-    })
-   }
+      message: "Password must be between 8 and 12 characters"
+    });
+  }
 
   // Check if the user already exists
   const existUser = await userModel.findOne({ email });
