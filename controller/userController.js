@@ -2,6 +2,8 @@ import userModel from "../model/userModel.js";
 import bcrypt from 'bcrypt';
 import validator from 'validator';
 import jwt from 'jsonwebtoken';
+import axios from "axios";
+import { google } from "googleapis";
  
 
 const userRegistration = async (req, res) => {
@@ -46,13 +48,16 @@ const userRegistration = async (req, res) => {
       message: 'User with this email already exists.',
     });
   }
+   
+  
 
   try {
     // Hash the password
     const salt = await bcrypt.genSalt(10);
      
     const hashPassword = await bcrypt.hash(password, salt);
-
+     
+    
     // Create a new user
     const newUser = new userModel({
       name,
@@ -113,9 +118,7 @@ const userLogin = async (req, res) => {
     }
 
     // Generate JWT token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET,);
 
     // Send response
     res.status(200).json({
@@ -155,5 +158,69 @@ return res.json({
 })
 }
 
-export {userLogin,userRegistration,adminLogin};
+const googleLogin = async (req, res) => {
+
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI
+  );
+
+  try {
+    const { code } = req.body;
+
+     console.log("code on serverside:",code);
+     console.log("client id:",process.env.GOOGLE_CLIENT_ID);
+     console.log("secret code:",process.env.GOOGLE_CLIENT_SECRET);
+     console.log("redirect url:",process.env.GOOGLE_REDIRECT_URI);
+ 
+
+    
+     const googleRes = await oauth2Client.getToken({
+      code,
+      redirect_uri: process.env.GOOGLE_REDIRECT_URI
+
+     });
+
+     console.log("Google responce:",googleRes);
+     oauth2Client.setCredentials(googleRes.tokens);
+      
+    const userRes = await axios.get(
+      `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleRes.tokens.access_token}`
+    );
+        console.log("google data:", userRes);
+        
+    const { email, name} = userRes.data; // Extract user info
+
+      
+    let user = await userModel.findOne({ email });
+
+    if (!user) {
+      // Register new Google user
+      user = new userModel({
+        name,
+        email,
+      });
+      await user.save();
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+
+    return res.json({
+      success: true,
+      message: "Google login successful.",
+      token
+    });
+  } catch (error) {
+    console.error("Google login error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Google authentication failed.",
+    });
+  }
+};
+
+ 
+export {userLogin,userRegistration,adminLogin,googleLogin};
 

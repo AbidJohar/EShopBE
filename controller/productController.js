@@ -45,6 +45,7 @@ const addProduct = async (req, res) => {
             })
         );
          
+         
         const product = new productModel({
             name,
             description,
