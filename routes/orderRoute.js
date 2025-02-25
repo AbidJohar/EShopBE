@@ -1,11 +1,11 @@
 import express from 'express';
-import { orderThroughCOD,orderThroughRazorpay,getAllProducts,updateOrders,userOrders } from '../controller/orderControllers.js';
+import { orderThroughCOD,orderThroughRazorpay,updateOrders,userOrders, getAllOrders } from '../controller/orderControllers.js';
 import adminAuth from '../middleware/adminAuth.js'
 import authUser from '../middleware/auth.js';
 const orderRouter = express.Router();
 
 // For admin
-orderRouter.post('/list',adminAuth, getAllProducts);
+orderRouter.post('/list',adminAuth, getAllOrders);
 orderRouter.post('/status',adminAuth, updateOrders);
 
 // For user

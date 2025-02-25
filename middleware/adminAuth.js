@@ -3,7 +3,6 @@ import jwt from 'jsonwebtoken';
 const adminAuthMiddleware = (req, res, next) => {
     // Get token from Authorization header
     const { token }= req.headers || req.headers['authorization']?.split(' ')[1]; // Bearer token
-       console.log("token", token);
        
     // If there's no token, return an error
     if (!token) {
