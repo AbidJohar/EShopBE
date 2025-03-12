@@ -1,9 +1,11 @@
 import userModel from "../model/userModel.js";
-import bcrypt from 'bcrypt';
+import bcrypt from "bcryptjs";
 import validator from 'validator';
 import jwt from 'jsonwebtoken';
-import axios from "axios";
-import { google } from "googleapis";
+// import axios from "axios";
+// import { google } from "googleapis";
+import { OAuth2Client } from "google-auth-library";
+
  
 
 const userRegistration = async (req, res) => {
@@ -159,40 +161,36 @@ return res.json({
 }
 
 const googleLogin = async (req, res) => {
-
-  const oauth2Client = new google.auth.OAuth2(
+  const client = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
     process.env.GOOGLE_REDIRECT_URI
   );
 
+console.log("goole redirect uri:",process.env.GOOGLE_REDIRECT_URI);
+
+
   try {
     const { code } = req.body;
+    console.log("Received Code:", code);
 
-     console.log("code on serverside:",code);
-     console.log("client id:",process.env.GOOGLE_CLIENT_ID);
-     console.log("secret code:",process.env.GOOGLE_CLIENT_SECRET);
-     console.log("redirect url:",process.env.GOOGLE_REDIRECT_URI);
- 
-
+    // Exchange authorization code for access token
+    // const { tokens } = await client.getToken(code, {
+    //   redirect_uri: process.env.GOOGLE_REDIRECT_URI
+    // }); 
     
-     const googleRes = await oauth2Client.getToken({
-      code,
-      redirect_uri: process.env.GOOGLE_REDIRECT_URI
+    const { tokens } = await client.getToken(code); 
+    console.log("google tokens:",tokens);
+    
+    const ticket =  client.verifyIdToken({
+      idToken: tokens.id_token, // Fix: Use tokens.id_token instead of 'token'
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
 
-     });
+    console.log("Google response:", ticket);
 
-     console.log("Google responce:",googleRes);
-     oauth2Client.setCredentials(googleRes.tokens);
-      
-    const userRes = await axios.get(
-      `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleRes.tokens.access_token}`
-    );
-        console.log("google data:", userRes);
-        
-    const { email, name} = userRes.data; // Extract user info
+    const { email, name } = ticket.getPayload(); // Extract user info
 
-      
     let user = await userModel.findOne({ email });
 
     if (!user) {
@@ -210,7 +208,7 @@ const googleLogin = async (req, res) => {
     return res.json({
       success: true,
       message: "Google login successful.",
-      token
+      token,
     });
   } catch (error) {
     console.error("Google login error:", error);
@@ -220,6 +218,10 @@ const googleLogin = async (req, res) => {
     });
   }
 };
+
+
+ 
+
 
  
 export {userLogin,userRegistration,adminLogin,googleLogin};

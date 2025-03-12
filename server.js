@@ -18,10 +18,7 @@ app.use(cors());
 connectToDB();
 connectCloudinary();
 
-// -------( Routes )--------
-// app.get('/', (req, res) => {
-//   return res.send("Welcome to the home page");
-// });
+ 
 
 // API Endpoints
 app.use('/api/v1/users', userRouter);   

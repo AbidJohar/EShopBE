@@ -1,10 +1,11 @@
-import orderModel from '../model/orderModel.js';
+import orderModel from '../model/orderModel.js'
+import userModel from '../model/userModel.js';
  // function to order the products through cash on delivery
 const orderThroughCOD = async (req,res)=>{
 try {
     const {userId, item, address, amount} = req.body;
-     console.log("user id", userId);
-     console.log("address", address);
+    //  console.log("user id", userId);
+    //  console.log("address", address);
      
     if ( !item || !address ) {
         return res.status(400).json({
